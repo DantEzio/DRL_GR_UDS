@@ -71,7 +71,7 @@ def get_step(sim,config,params,tn,Qn,sflooding,sCSO):
             +sys.routing_stats['groundwater_inflow']
             +sys.routing_stats['II_inflow'])
     
-    Res_tn = 1/(1+params['kc']*(tem_sevC)/(Qtw)+params['kf']*(tem_sevF)/(Qtw))
+    Res_tn = 1/(1+params['kc']*((tem_sevC)/(Qtw))+params['kf']*((tem_sevF)/(Qtw)))
     DRes_tn = 1/(1+(tem_dres)/(Qtw))
     CSO = CSOtem - sCSO
     sCSO = CSOtem
