@@ -41,24 +41,24 @@ agent_params={
     'state_dim':len(env.config['states']),
     'action_dim':2**len(env.config['action_assets']),
 
-    'encoding_layer':[50,50,50],
-    'value_layer':[50,50,50],
-    'advantage_layer':[50,50,50],
+    'encoding_layer':[50,50],
+    'value_layer':[50],
+    'advantage_layer':[50],
     'num_rain':40,
 
     'train_iterations':2,
-    'training_step':300,
+    'training_step':100,
     'gamma':0.1,
-    'epsilon':1,
+    'epsilon':0.7,
     'ep_min':1e-100,
-    'ep_decay':0.1,
-    'learning_rate':0.01
+    'ep_decay':0.5,
+    'learning_rate':0.001
 }
 
 
 Train=True
-init_train=True
-train_round='1'
+init_train=False
+train_round='2'
 
 model = DDQN.DDQN(agent_params)
 if init_train:
