@@ -31,39 +31,41 @@ env=SWMM_ENV.SWMM_ENV(env_params)
 
 raindatae = np.load('./training_rainfall/training_raindata.npy').tolist()
 raindataw = np.load('./training_rainfall/training_raindata.npy').tolist()
-temeast = np.load('./test_rainfall/east.npy').tolist()
-temwest = np.load('./test_rainfall/west.npy').tolist()
+temeast = np.load('./test_rainfall/RSH/east.npy').tolist()
+temwest = np.load('./test_rainfall/RSH/west.npy').tolist()
 #raindata2top = np.load('./training_rainfall/2top.npy').tolist()
 #raindata3top = np.load('./training_rainfall/3top.npy').tolist()
-rr = np.load('./test_rainfall/real.npy').tolist()
+rr = np.load('./test_rainfall/RealRain/real.npy').tolist()
+
+raindatae = temeast + rr + raindatae
+raindataw = temwest + rr + raindataw 
 
 agent_params={
     'state_dim':len(env.config['states']),
     'action_dim':2**len(env.config['action_assets']),
 
-    'encoding_layer':[50,50],
-    'value_layer':[50],
-    'advantage_layer':[50],
-    'num_rain':40,
+    'encoding_layer':[30,30,30],
+    'value_layer':[30,30,30],
+    'advantage_layer':[30,30,30],
+    'num_rain':30,
 
     'train_iterations':2,
-    'training_step':100,
+    'training_step':50,
     'gamma':0.1,
-    'epsilon':0.7,
+    'epsilon':0.01,
     'ep_min':1e-100,
-    'ep_decay':0.5,
+    'ep_decay':0.7,
     'learning_rate':0.001
 }
 
-
 Train=True
 init_train=False
-train_round='2'
+train_round='4'
 
 model = DDQN.DDQN(agent_params)
 if init_train:
     model.model.save_weights('./model/ddqn.h5')    
-model.load_model('./model/')
+model.load_model('./model/ddqn.h5')
 print('model done')
 
 ###############################################################################
@@ -73,7 +75,7 @@ print('model done')
 def interact(i,ep):   
     env=SWMM_ENV.SWMM_ENV(env_params)
     tem_model = DDQN.DDQN(agent_params)
-    tem_model.load_model('./model/')
+    tem_model.load_model('./model/ddqn.h5')
     tem_model.params['epsilon']=ep
     s,a,r,s_ = [],[],[],[]
     observation, episode_return, episode_length = env.reset(raindatae[i],raindataw[i],i,True), 0, 0
@@ -205,9 +207,9 @@ def test(model,raine,rainw,i):
 
 
 # RSH test
-rainfalle = np.load('./test_rainfall/east.npy').tolist()
-rainfallw = np.load('./test_rainfall/west.npy').tolist()
-model.load_model('./model/')
+rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
+rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
+model.load_model('./model/ddqn.h5')
 for i in range(len(rainfalle)):
     print(i)
     test_his = test(model,rainfalle[i],rainfallw[i],i)
@@ -215,8 +217,8 @@ for i in range(len(rainfalle)):
 
 
 # Real rainfall
-rainfall = np.load('./test_rainfall/real.npy').tolist()
-model.load_model('./model/')
+rainfall = np.load('./test_rainfall/RealRain/real.npy').tolist()
+model.load_model('./model/ddqn.h5')
 for i in range(len(rainfall)):
     print(i)
     test_his = test(model,rainfall[i],rainfall[i],i)

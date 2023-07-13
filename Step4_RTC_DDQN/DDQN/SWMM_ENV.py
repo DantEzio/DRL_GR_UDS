@@ -110,7 +110,7 @@ class SWMM_ENV:
         
         #设置控制
         for item,a in zip(self.config['action_assets'],action):
-            links[item].target_setting = a * 0.01
+            links[item].target_setting = 5 * a
         
         
         #模拟一步

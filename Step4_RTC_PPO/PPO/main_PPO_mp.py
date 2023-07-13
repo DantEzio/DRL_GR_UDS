@@ -28,14 +28,14 @@ env=SWMM_ENV.SWMM_ENV(env_params)
 
 raindatae = np.load('./training_rainfall/training_raindata.npy').tolist()
 raindataw = np.load('./training_rainfall/training_raindata.npy').tolist()
-temeast = np.load('./test_rainfall/east.npy').tolist()
-temwest = np.load('./test_rainfall/west.npy').tolist()
+temeast = np.load('./test_rainfall/RSH/east.npy').tolist()
+temwest = np.load('./test_rainfall/RSH/west.npy').tolist()
 #raindata2top = np.load('./training_rainfall/2top.npy').tolist()
 #raindata3top = np.load('./training_rainfall/3top.npy').tolist()
-rr = np.load('./test_rainfall/real.npy').tolist()
+rr = np.load('./test_rainfall/RealRain/real.npy').tolist()
 
-#raindatae=temeast+rr+raindatae
-#raindataw=temwest+rr+raindataw
+raindatae = temeast + rr + raindatae
+raindataw = temwest + rr + raindataw 
 
 agent_params={
     'state_dim':len(env.config['states']),
@@ -50,24 +50,24 @@ agent_params={
     'target_kl':0.01,
     'lam':0.01,
     
-    'policy_learning_rate':0.01,
-    'value_learning_rate':0.01,
+    'policy_learning_rate':0.001,
+    'value_learning_rate':0.001,
     'train_policy_iterations':2,
     'train_value_iterations':2,
     
-    'num_rain':40,
+    'num_rain':30,
     
-    'training_step':500,
+    'training_step':50,
     'gamma':0.1,
     'epsilon':1,#1递减，最终1e-100
     'ep_min':1e-100,
-    'ep_decay':0.1
+    'ep_decay':0.7
 }
 
 
-Train=True
+Train=False
 init_train=False
-train_round='4-1'
+train_round='1'
 
 model = PPO.PPO(agent_params)
 if init_train:
@@ -134,7 +134,7 @@ if Train:
         
         # Iterate over the steps of each epoch
         # Parallel method in joblib
-        res = Parallel(n_jobs=5)(delayed(interact)(i,model.params['epsilon']) for i in range(model.params['num_rain'])) 
+        res = Parallel(n_jobs=10)(delayed(interact)(i,model.params['epsilon']) for i in range(model.params['num_rain'])) 
         
         for i in range(model.params['num_rain']):
             #s, a, r, vt, lo, lastvalue in buffer
@@ -228,8 +228,8 @@ def test(model,raine,rainw,i):
 
 
 # RSH test
-rainfalle = np.load('./test_rainfall/east.npy').tolist()
-rainfallw = np.load('./test_rainfall/west.npy').tolist()
+rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
+rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
 model.load_model('./model/')
 for i in range(len(rainfalle)):
     print(i)
@@ -238,7 +238,7 @@ for i in range(len(rainfalle)):
 
 
 # Real rainfall
-rainfall = np.load('./test_rainfall/real.npy').tolist()
+rainfall = np.load('./test_rainfall/RealRain/real.npy').tolist()
 model.load_model('./model/')
 for i in range(len(rainfall)):
     print(i)

@@ -40,8 +40,8 @@ class DDQN:
         #self.model.compile(loss='mse', optimizer=Adam(self.params['learning_rate']))
                                                 
     def load_model(self,file):
-        self.model.load_weights(file+'/ddqn.h5')
-        self.target_model.load_weights(file+'/ddqn.h5')
+        self.model.load_weights(file)
+        self.target_model.load_weights(file)
 
 # 
 def sample_action(state,model,train_log):
