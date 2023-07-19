@@ -14,6 +14,7 @@ import datetime
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
+from swmm_api import read_out_file
 
 tf.compat.v1.reset_default_graph()
 env_params={
@@ -94,7 +95,12 @@ def interact(i,ep):
         observation = np.array(observation).reshape(1, -1)
         logits, action = PPO.sample_action(observation,tem_model,True)
         at = tem_model.action_table[int(action[0].numpy())].tolist()
-        observation_new, reward, flooding,CSO,Res_tn,DRes_tn,main_flow,done,_ = env.step(at)
+        observation_new, reward, results, done = env.step(at)
+        flooding,CSO=results['flooding'],results['CSO']
+        Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
+        main_flow = results['main_flow']
+        capacity = results['capacity']
+
         episode_return += reward
         episode_length += 1
 
@@ -199,8 +205,9 @@ if Train:
 def test(model,raine,rainw,i):
     # simulation on given rainfall
     env=SWMM_ENV.SWMM_ENV(env_params)
-    test_history = {'time':[] ,'state': [], 'action': [], 'reward': [], 
-                    'F':[], 'C':[], 'RES':[], 'DRES':[], 'mainpip':[],'pump_flow':[]}
+    test_history = {'time': [], 'state': [], 'action': [], 'reward': [],
+                    'F': [], 'C': [], 'RES': [], 'DRES': [], 'mainpip': [], 'pump_flow': [],
+                    'capacity':[]}
     observation = env.reset(raine,rainw,i,False)
     done, t= False, 0
     test_history['time'].append(t)
@@ -209,7 +216,13 @@ def test(model,raine,rainw,i):
         observation = np.array(observation).reshape(1, -1)
         logits, action = PPO.sample_action(observation,model,False)
         at=model.action_table[int(action[0].numpy())].tolist()
-        observation_new,reward,F,C,Res_tn,DRes_tn,main_flow,done,pf = env.step(at)
+        observation_new,reward,results,done = env.step(at)
+
+        F,C=results['flooding'],results['CSO']
+        Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
+        pf = results['pump_flow']
+        main_flow = results['main_flow']
+        capacity = results['capacity']
         observation = observation_new
         t +=1
         
@@ -223,7 +236,7 @@ def test(model,raine,rainw,i):
         test_history['DRES'].append(DRes_tn)
         test_history['mainpip'].append(main_flow)
         test_history['pump_flow'].append(pf)
-    
+        test_history['capacity'].append(capacity)
     return test_history
 
 
@@ -238,12 +251,12 @@ for i in range(len(rainfalle)):
 
 
 # Real rainfall
-rainfall = np.load('./test_rainfall/RealRain/real.npy').tolist()
-model.load_model('./model/')
-for i in range(len(rainfall)):
-    print(i)
-    test_his = test(model,rainfall[i],rainfall[i],i)
-    np.save('./Results/RR/'+str(i)+'.npy',test_his)
+#rainfall = np.load('./test_rainfall/RealRain/real.npy').tolist()
+#model.load_model('./model/')
+#for i in range(len(rainfall)):
+#    print(i)
+#    test_his = test(model,rainfall[i],rainfall[i],i)
+#    np.save('./Results/RR/'+str(i)+'.npy',test_his)
 
 
 '''
