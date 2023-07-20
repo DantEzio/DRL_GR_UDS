@@ -221,22 +221,23 @@ def test(model,raine,rainw,i):
 
 
 # RSH test
-rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
-rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
+#rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
+#rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
+#model.load_model('./model/ddqn.h5')
+#for i in range(len(rainfalle)):
+#    print(i)
+#    test_his = test(model,rainfalle[i],rainfallw[i],i)
+#    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
+
+
+# Real rainfall
+rainfalle = np.load('./test_rainfall/RealRain/reale.npy').tolist()
+rainfallw = np.load('./test_rainfall/RealRain/realw.npy').tolist()
 model.load_model('./model/ddqn.h5')
 for i in range(len(rainfalle)):
     print(i)
     test_his = test(model,rainfalle[i],rainfallw[i],i)
-    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
-
-
-# Real rainfall
-#rainfall = np.load('./test_rainfall/RealRain/real.npy').tolist()
-#model.load_model('./model/ddqn.h5')
-#for i in range(len(rainfall)):
-#    print(i)
-#    test_his = test(model,rainfall[i],rainfall[i],i)
-#    np.save('./Results/RR/'+str(i)+'.npy',test_his)
+    np.save('./Results/RR/'+str(i)+'.npy',test_his)
 
 '''
 # RN test
