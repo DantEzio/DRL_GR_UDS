@@ -39,7 +39,7 @@ class SWMM_ENV:
         self.config = yaml.load(open(self.params['parm']+".yaml"), yaml.FullLoader)
         #self.t=[]
     
-    def reset(self,raine,rainw,i,trainlog):
+    def reset(self,raine,rainw,i,trainlog,testid):
         #分东西的情况raine与rainw为两场降雨，不分的情况两者为同一个
         if trainlog:
             root='_teminp'
@@ -50,8 +50,8 @@ class SWMM_ENV:
         # gs.add_GI(inp)
         inp[TIMESERIES]['rainfalle']=TimeseriesData('rainfalle',raine)
         inp[TIMESERIES]['rainfallw']=TimeseriesData('rainfallw',rainw)
-        inp.write_file('./'+root+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
-        self.sim=Simulation('./'+root+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
+        inp.write_file('./'+root+'/'+testid+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
+        self.sim=Simulation('./'+root+'/'+testid+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
         self.sim.start()
         
         #模拟一步

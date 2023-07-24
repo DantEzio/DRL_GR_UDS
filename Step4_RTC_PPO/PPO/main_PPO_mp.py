@@ -21,7 +21,7 @@ env_params={
     'orf':'chaohu_GI_RTC',
     'parm':'./states_yaml/chaohu',
     'GI':True,
-    'advance_seconds':300,
+    'advance_seconds':60,
     'kf':1e3,
     'kc':1e3,
 }
@@ -95,11 +95,14 @@ def interact(i,ep):
         observation = np.array(observation).reshape(1, -1)
         logits, action = PPO.sample_action(observation,tem_model,True)
         at = tem_model.action_table[int(action[0].numpy())].tolist()
-        observation_new, reward, results, done = env.step(at)
-        flooding,CSO=results['flooding'],results['CSO']
-        Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
-        main_flow = results['main_flow']
-        capacity = results['capacity']
+        for _ in range(int(300/tem_model.params['advance_seconds'])):
+            observation_new, reward, results, done = env.step(at)
+            if done:
+                break
+            flooding,CSO=results['flooding'],results['CSO']
+            Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
+            main_flow = results['main_flow']
+            capacity = results['capacity']
 
         episode_return += reward
         episode_length += 1
@@ -202,13 +205,13 @@ if Train:
 
     
 # test PPO agent
-def test(model,raine,rainw,i):
+def test(model,raine,rainw,i,testid):
     # simulation on given rainfall
     env=SWMM_ENV.SWMM_ENV(env_params)
     test_history = {'time': [], 'state': [], 'action': [], 'reward': [],
                     'F': [], 'C': [], 'RES': [], 'DRES': [], 'mainpip': [], 'pump_flow': [],
                     'capacity':[]}
-    observation = env.reset(raine,rainw,i,False)
+    observation = env.reset(raine,rainw,i,False,testid)
     done, t= False, 0
     test_history['time'].append(t)
     test_history['state'].append(observation)
@@ -216,27 +219,30 @@ def test(model,raine,rainw,i):
         observation = np.array(observation).reshape(1, -1)
         logits, action = PPO.sample_action(observation,model,False)
         at=model.action_table[int(action[0].numpy())].tolist()
-        observation_new,reward,results,done = env.step(at)
-
-        F,C=results['flooding'],results['CSO']
-        Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
-        pf = results['pump_flow']
-        main_flow = results['main_flow']
-        capacity = results['capacity']
+        for _ in range(int(300/env.params['advance_seconds'])):
+            observation_new,reward,results,done = env.step(at)
+            if done:
+                break
+            F,C=results['flooding'],results['CSO']
+            Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
+            pf = results['pump_flow']
+            main_flow = results['main_flow']
+            capacity = results['capacity']
+            t += 1
+            test_history['time'].append(t)
+            test_history['state'].append(observation)
+            test_history['action'].append(action)
+            test_history['reward'].append(reward)
+            test_history['F'].append(F)
+            test_history['C'].append(C)
+            test_history['RES'].append(Res_tn)
+            test_history['DRES'].append(DRes_tn)
+            test_history['mainpip'].append(main_flow)
+            test_history['pump_flow'].append(pf)
+            test_history['capacity'].append(capacity)
+            
         observation = observation_new
-        t +=1
         
-        test_history['time'].append(t)
-        test_history['state'].append(observation)
-        test_history['action'].append(action)
-        test_history['reward'].append(reward)
-        test_history['F'].append(F)
-        test_history['C'].append(C)
-        test_history['RES'].append(Res_tn)
-        test_history['DRES'].append(DRes_tn)
-        test_history['mainpip'].append(main_flow)
-        test_history['pump_flow'].append(pf)
-        test_history['capacity'].append(capacity)
     return test_history
 
 
@@ -246,17 +252,17 @@ def test(model,raine,rainw,i):
 #model.load_model('./model/')
 #for i in range(len(rainfalle)):
 #    print(i)
-#    test_his = test(model,rainfalle[i],rainfallw[i],i)
+#    test_his = test(model,rainfalle[i],rainfallw[i],i,'RSH')
 #    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
 
 
 # Real rainfall
-rainfalle = np.load('./test_rainfall/RealRain/reale.npy').tolist()
+rainfalle = np.load('./test_rainfall/RealRain/realw.npy').tolist()
 rainfallw = np.load('./test_rainfall/RealRain/realw.npy').tolist()
 model.load_model('./model/')
 for i in range(len(rainfalle)):
     print(i)
-    test_his = test(model,rainfalle[i],rainfallw[i],i)
+    test_his = test(model,rainfalle[i],rainfallw[i],i,'RR')
     np.save('./Results/RR/'+str(i)+'.npy',test_his)
 
 

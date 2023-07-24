@@ -40,7 +40,7 @@ class SWMM_ENV:
         self.config = yaml.load(open(self.params['parm']+".yaml"), yaml.FullLoader)
         #self.t=[]
     
-    def reset(self,raine,rainw,i,trainlog):
+    def reset(self,raine,rainw,i,trainlog,testid):
         #分东西的情况raine与rainw为两场降雨，不分的情况两者为同一个
         if trainlog:
             root='_teminp'
@@ -51,8 +51,8 @@ class SWMM_ENV:
         # gs.add_GI(inp)
         inp[TIMESERIES]['rainfalle']=TimeseriesData('rainfalle',raine)
         inp[TIMESERIES]['rainfallw']=TimeseriesData('rainfallw',rainw)
-        inp.write_file('./'+root+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
-        self.sim=Simulation('./'+root+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
+        inp.write_file('./'+root+'/'+testid+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
+        self.sim=Simulation('./'+root+'/'+testid+'/'+self.params['orf']+str(i)+'_GI_rain.inp')
         self.sim.start()
         
         #模拟一步
@@ -129,9 +129,9 @@ class SWMM_ENV:
         else:
             time = self.sim._model.swmm_stride(self.params['advance_seconds'])
         #self.t.append(self.sim._model.getCurrentSimulationTime())
-        Interval_t=self.params['advance_seconds']/60 #minutes
+        Interval_t=self.params['advance_seconds'] #minutes
         done = False if time > 0 else True
-        
+
         #获取reward
         #reward分为2个部分，Res和DRes，其中Res通过计算SevC和SevF获取，DRes通过计算干管节点流量获取
         #均需要通过流量乘时间间隔计算
@@ -206,10 +206,6 @@ class SWMM_ENV:
         if done:
             self.sim._model.swmm_end()
             self.sim._model.swmm_close()
-
-
-        out = read_out_file('./SWMM/chaohu_rain.out')
-        results['out']=out
 
         return states,rewards,results,done
         

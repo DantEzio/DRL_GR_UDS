@@ -103,8 +103,8 @@ def simfile(Scenario,file,rainid,config,params):
     for _temp in config['reward_targets']:
         if _temp[0] == 'DRes': 
             Qn[_temp[1]] = nodes[_temp[1]].total_inflow
-    for t in range(95):
-        sim._model.swmm_stride(300)
+    for t in range(95*5):
+        sim._model.swmm_stride(60)
         Qn,tn,observation,reward,cur_flooding,cur_CSO,Res_tn,DRes_tn,main_flow=get_step(sim,config,params,tn,Qn,cur_flooding,cur_CSO)
         test_history['time'].append(t)
         test_history['state'].append(observation)
