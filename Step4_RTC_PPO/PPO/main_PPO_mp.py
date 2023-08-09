@@ -21,9 +21,10 @@ env_params={
     'orf':'chaohu_GI_RTC',
     'parm':'./states_yaml/chaohu',
     'GI':True,
-    'advance_seconds':60,
-    'kf':1e3,
-    'kc':1e3,
+    'advance_seconds':300,
+    'kf':0.5,
+    'kc':0.5,
+    'train':True,
 }
 env=SWMM_ENV.SWMM_ENV(env_params)
 
@@ -51,24 +52,24 @@ agent_params={
     'target_kl':0.01,
     'lam':0.01,
     
-    'policy_learning_rate':0.001,
-    'value_learning_rate':0.001,
+    'policy_learning_rate':0.01,
+    'value_learning_rate':0.01,
     'train_policy_iterations':2,
     'train_value_iterations':2,
     
     'num_rain':30,
     
-    'training_step':50,
+    'training_step':200,
     'gamma':0.1,
-    'epsilon':1,#1递减，最终1e-100
+    'epsilon':1e-40,#1递减，最终1e-100
     'ep_min':1e-100,
-    'ep_decay':0.7
+    'ep_decay':0.99
 }
 
 
 Train=False
 init_train=False
-train_round='1'
+train_round='3'
 
 model = PPO.PPO(agent_params)
 if init_train:
@@ -87,7 +88,7 @@ def interact(i,ep):
     tem_model.load_model('./model/')
     tem_model.params['epsilon']=ep
     s,a,r,vt,lo = [],[],[],[],[]
-    observation, episode_return, episode_length = env.reset(raindatae[i],raindataw[i],i,True), 0, 0
+    observation, episode_return, episode_length = env.reset(raindatae[i],raindataw[i],i,True,'train'), 0, 0
     
     done = False
     while not done:
@@ -95,14 +96,11 @@ def interact(i,ep):
         observation = np.array(observation).reshape(1, -1)
         logits, action = PPO.sample_action(observation,tem_model,True)
         at = tem_model.action_table[int(action[0].numpy())].tolist()
-        for _ in range(int(300/tem_model.params['advance_seconds'])):
-            observation_new, reward, results, done = env.step(at)
-            if done:
-                break
-            flooding,CSO=results['flooding'],results['CSO']
-            Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
-            main_flow = results['main_flow']
-            capacity = results['capacity']
+        observation_new, reward, results, done = env.step(at)
+        flooding,CSO=results['flooding'],results['CSO']
+        Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
+        main_flow = results['main_flow']
+        capacity = results['capacity']
 
         episode_return += reward
         episode_length += 1
@@ -202,7 +200,15 @@ if Train:
 ###############################################################################
 # end Train
 ###############################################################################
-
+env_params={
+    'orf':'chaohu_GI_RTC',
+    'parm':'./states_yaml/chaohu',
+    'GI':True,
+    'advance_seconds':30,
+    'kf':1,
+    'kc':1,
+    'train':False,
+}
     
 # test PPO agent
 def test(model,raine,rainw,i,testid):
@@ -245,15 +251,14 @@ def test(model,raine,rainw,i,testid):
         
     return test_history
 
-
 # RSH test
-#rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
-#rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
-#model.load_model('./model/')
-#for i in range(len(rainfalle)):
-#    print(i)
-#    test_his = test(model,rainfalle[i],rainfallw[i],i,'RSH')
-#    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
+rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
+rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
+model.load_model('./model/')
+for i in range(len(rainfalle)):
+    print(i)
+    test_his = test(model,rainfalle[i],rainfallw[i],i,'RSH')
+    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
 
 
 # Real rainfall

@@ -46,8 +46,8 @@ class SWMM_ENV:
             root='_teminp'
         else:
             root='_temtestinp'
-        shutil.copyfile('./SWMM/'+self.params['orf']+'.inp', './'+root+'/'+self.params['orf']+str(i)+'.inp')
-        inp = read_inp_file('./'+root+'/'+self.params['orf']+str(i)+'.inp')
+        shutil.copyfile('./SWMM/'+self.params['orf']+'.inp', './'+root+'/'+testid+'/'+self.params['orf']+str(i)+'.inp')
+        inp = read_inp_file('./'+root+'/'+testid+'/'+self.params['orf']+str(i)+'.inp')
         # gs.add_GI(inp)
         inp[TIMESERIES]['rainfalle']=TimeseriesData('rainfalle',raine)
         inp[TIMESERIES]['rainfallw']=TimeseriesData('rainfallw',rainw)
@@ -119,8 +119,12 @@ class SWMM_ENV:
             
         
         #设置控制
-        for item,a in zip(self.config['action_assets'],action):
-            links[item].target_setting = 1.5*a
+        if self.params['train']:
+            for item,a in zip(self.config['action_assets'],action):
+                links[item].target_setting = a
+        else:
+            for item,a in zip(self.config['action_assets'],action):
+                links[item].target_setting = a
         
         
         #模拟一步
@@ -206,10 +210,6 @@ class SWMM_ENV:
         if done:
             self.sim._model.swmm_end()
             self.sim._model.swmm_close()
-
-
-        out = read_out_file('./SWMM/chaohu_rain.out')
-        results['out']=out
 
         return states,rewards,results,done
         

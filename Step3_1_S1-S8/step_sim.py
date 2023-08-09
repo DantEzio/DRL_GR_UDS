@@ -75,7 +75,7 @@ def get_step(sim,config,params,tn,Qn,sflooding,sCSO):
     DRes_tn = 1/(1+(tem_dres)/(Qtw))
     CSO = CSOtem - sCSO
     sCSO = CSOtem
-    rewards = Res_tn+DRes_tn
+    rewards = Res_tn
     
     #获取干管流量结果
     mainpip=['WS02006251WS02006249','WS02006235WS02006234','WS02006229WS02006228']
@@ -84,8 +84,8 @@ def get_step(sim,config,params,tn,Qn,sflooding,sCSO):
         main_flow.append(links[pip].flow)
     return Qn,tn,states,rewards,sflooding,sCSO,Res_tn,DRes_tn,main_flow
 
-def simfile(Scenario,file,rainid,config,params):
-    sim=Simulation(file)
+def simfile(file,rainid,config,params):
+    sim=Simulation(file+'chaohu_rain_'+str(rainid)+'.inp')
     #sim.execute()
     sim.start()
     sim._model.swmm_stride(300)
@@ -116,4 +116,4 @@ def simfile(Scenario,file,rainid,config,params):
         test_history['mainpip'].append(main_flow)
     sim._model.swmm_end()
     sim._model.swmm_close()
-    np.save('./'+Scenario+'/Results/'+str(rainid)+'.npy',test_history)
+    np.save(file+str(rainid)+'.npy',test_history)

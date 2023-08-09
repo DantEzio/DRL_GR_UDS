@@ -23,10 +23,11 @@ tf.compat.v1.disable_eager_execution()
 env_params={
     'orf':'chaohu_RTC',
     'parm':'./states_yaml/chaohu',
-    'GI':True,
-    'advance_seconds':60,
-    'kf':1e3,
-    'kc':1e3,
+    'GI':False,
+    'advance_seconds':300,
+    'kf':0.5,
+    'kc':0.5,
+    'train':True,
 }
 env=SWMM_ENV.SWMM_ENV(env_params)
 
@@ -51,17 +52,17 @@ agent_params={
     'num_rain':30,
 
     'train_iterations':2,
-    'training_step':50,
+    'training_step':100,
     'gamma':0.1,
-    'epsilon':0.01,
+    'epsilon':1e-30,
     'ep_min':1e-100,
-    'ep_decay':0.7,
+    'ep_decay':0.99,
     'learning_rate':0.001
 }
 
 Train=False
 init_train=False
-train_round='4'
+train_round='2'
 
 model = DDQN.DDQN(agent_params)
 if init_train:
@@ -79,7 +80,7 @@ def interact(i,ep):
     tem_model.load_model('./model/ddqn.h5')
     tem_model.params['epsilon']=ep
     s,a,r,s_ = [],[],[],[]
-    observation, episode_return, episode_length = env.reset(raindatae[i],raindataw[i],i,True), 0, 0
+    observation, episode_return, episode_length = env.reset(raindatae[i],raindataw[i],i,True,'train'), 0, 0
     
     done = False
     while not done:
@@ -88,14 +89,11 @@ def interact(i,ep):
         action = DDQN.sample_action(observation,tem_model,True)
         #print(action,'********************8')
         at = tem_model.action_table[int(action)-1].tolist()
-        for _ in range(int(300/tem_model.params['advance_seconds'])):
-            observation_new, reward, results, done = env.step(at)
-            if done:
-                break
-            flooding,CSO=results['flooding'],results['CSO']
-            Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
-            main_flow = results['main_flow']
-            capacity = results['capacity']
+        observation_new, reward, results, done = env.step(at)
+        flooding,CSO=results['flooding'],results['CSO']
+        Res_tn,DRes_tn=results['Res_tn'],results['DRes_tn']
+        main_flow = results['main_flow']
+        capacity = results['capacity']
 
         episode_return += reward
         episode_length += 1
@@ -113,6 +111,7 @@ def interact(i,ep):
     last_value = 0 if done else tem_model.predict(observation.reshape(1, -1))  
     return s,a,r,s_,last_value,episode_return,episode_length
 
+
 if Train:
     #tf.config.experimental_run_functions_eagerly(True)
 
@@ -128,12 +127,10 @@ if Train:
         
         # Initialize the buffer
         buffer = Buffer.Buffer(model.params['state_dim'], int(len(raindatae[0])*model.params['num_rain']))
-        print('Buffer got')
-        
+
         # Iterate over the steps of each epoch
         # Parallel method in joblib
         res = Parallel(n_jobs=10)(delayed(interact)(i,model.params['epsilon']) for i in range(model.params['num_rain'])) 
-        print('Sample over')
         
         for i in range(model.params['num_rain']):
             #s, a, r, vt, lo, lastvalue in buffer
@@ -166,9 +163,7 @@ if Train:
             model.params['epsilon'] *= model.params['ep_decay']
         
         # Print mean return and length for each epoch
-        print(
-            f" Epoch: {epoch + 1}. Return: {sum_return}. Mean Length: {sum_length / num_episodes}"
-        )
+        print(f' Epoch: {epoch + 1}. Return: {sum_return}. Mean Length: {sum_length / num_episodes}')
         
         np.save('./Results//Train'+train_round+'.npy',history)
     
@@ -181,7 +176,14 @@ if Train:
 ###############################################################################
 # end Train
 ###############################################################################
-
+env_params={
+    'orf':'chaohu_RTC',
+    'parm':'./states_yaml/chaohu',
+    'advance_seconds':30,
+    'kf':1,
+    'kc':1,
+    'train':False,
+}
 
 # test PPO agent
 def test(model,raine,rainw,i,testid):
@@ -194,6 +196,7 @@ def test(model,raine,rainw,i,testid):
     done, t= False, 0
     test_history['time'].append(t)
     test_history['state'].append(observation)
+    kk=0
     while not done:
         observation = np.array(observation).reshape(1, -1)
         action = DDQN.sample_action(observation,model,False)
@@ -207,7 +210,7 @@ def test(model,raine,rainw,i,testid):
             pf = results['pump_flow']
             main_flow = results['main_flow']
             capacity = results['capacity']
-            t += 1
+            t +=1
             test_history['time'].append(t)
             test_history['state'].append(observation)
             test_history['action'].append(action)
@@ -220,18 +223,17 @@ def test(model,raine,rainw,i,testid):
             test_history['pump_flow'].append(pf)
             test_history['capacity'].append(capacity)
         observation = observation_new
-        
     return test_history
 
 
 # RSH test
-#rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
-#rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
-#model.load_model('./model/ddqn.h5')
-#for i in range(len(rainfalle)):
-#    print(i)
-#    test_his = test(model,rainfalle[i],rainfallw[i],i,'RSH')
-#    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
+rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()
+rainfallw = np.load('./test_rainfall/RSH/west.npy').tolist()
+model.load_model('./model/ddqn.h5')
+for i in range(len(rainfalle)):
+    print(i)
+    test_his = test(model,rainfalle[i],rainfallw[i],i,'RSH')
+    np.save('./Results/RSH/'+str(i)+'.npy',test_his)
 
 
 # Real rainfall
