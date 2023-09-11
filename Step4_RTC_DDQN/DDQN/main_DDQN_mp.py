@@ -51,7 +51,7 @@ agent_params={
     'num_rain':30,
 
     'train_iterations':2,
-    'training_step':200,
+    'training_step':300,
     'gamma':0.1,
     'epsilon':1,
     'ep_min':1e-100,
@@ -59,8 +59,8 @@ agent_params={
     'learning_rate':0.01
 }
 
-Train=False
-init_train=False
+Train=True
+init_train=True
 train_round='1'
 
 model = DDQN.DDQN(agent_params)

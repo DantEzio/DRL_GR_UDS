@@ -22,8 +22,8 @@ env_params={
     'parm':'./states_yaml/chaohu',
     'GI':True,
     'advance_seconds':300,
-    'kf':0.5,
-    'kc':0.5,
+    'kf':1,
+    'kc':1,
     'train':True,
 }
 env=SWMM_ENV.SWMM_ENV(env_params)
@@ -59,16 +59,16 @@ agent_params={
     
     'num_rain':30,
     
-    'training_step':100,
+    'training_step':300,
     'gamma':0.1,
-    'epsilon':1,#1递减，最终1e-100
+    'epsilon':1e-2,#1递减，最终1e-100
     'ep_min':1e-100,
     'ep_decay':0.99
 }
 
-Train=False
+Train=True
 init_train=False
-train_round='1'
+train_round='2'
 
 model = PPO.PPO(agent_params)
 if init_train:

@@ -21,12 +21,11 @@ tf.compat.v1.reset_default_graph()
 tf.compat.v1.disable_eager_execution()
 
 env_params={
-    'orf':'chaohu_RTC',
+    'orf':'chaohu_GI_RTC',
     'parm':'./states_yaml/chaohu',
-    'GI':False,
     'advance_seconds':300,
-    'kf':0.5,
-    'kc':0.5,
+    'kf':1,
+    'kc':1,
     'train':True,
 }
 env=SWMM_ENV.SWMM_ENV(env_params)
@@ -52,17 +51,17 @@ agent_params={
     'num_rain':30,
 
     'train_iterations':2,
-    'training_step':100,
+    'training_step':300,
     'gamma':0.1,
-    'epsilon':1e-30,
+    'epsilon':1,
     'ep_min':1e-100,
-    'ep_decay':0.99,
-    'learning_rate':0.001
+    'ep_decay':0.999,
+    'learning_rate':0.01
 }
 
-Train=False
-init_train=False
-train_round='2'
+Train=True
+init_train=True
+train_round='1'
 
 model = DDQN.DDQN(agent_params)
 if init_train:
@@ -111,7 +110,6 @@ def interact(i,ep):
     last_value = 0 if done else tem_model.predict(observation.reshape(1, -1))  
     return s,a,r,s_,last_value,episode_return,episode_length
 
-
 if Train:
     #tf.config.experimental_run_functions_eagerly(True)
 
@@ -127,7 +125,7 @@ if Train:
         
         # Initialize the buffer
         buffer = Buffer.Buffer(model.params['state_dim'], int(len(raindatae[0])*model.params['num_rain']))
-
+        
         # Iterate over the steps of each epoch
         # Parallel method in joblib
         res = Parallel(n_jobs=10)(delayed(interact)(i,model.params['epsilon']) for i in range(model.params['num_rain'])) 
@@ -163,7 +161,9 @@ if Train:
             model.params['epsilon'] *= model.params['ep_decay']
         
         # Print mean return and length for each epoch
-        print(f' Epoch: {epoch + 1}. Return: {sum_return}. Mean Length: {sum_length / num_episodes}')
+        print(
+            f" Epoch: {epoch + 1}. Return: {sum_return}. Mean Length: {sum_length / num_episodes}"
+        )
         
         np.save('./Results//Train'+train_round+'.npy',history)
     
@@ -176,8 +176,9 @@ if Train:
 ###############################################################################
 # end Train
 ###############################################################################
+
 env_params={
-    'orf':'chaohu_RTC',
+    'orf':'chaohu_GI_RTC',
     'parm':'./states_yaml/chaohu',
     'advance_seconds':30,
     'kf':1,
@@ -224,7 +225,6 @@ def test(model,raine,rainw,i,testid):
             test_history['capacity'].append(capacity)
         observation = observation_new
     return test_history
-
 
 # RSH test
 rainfalle = np.load('./test_rainfall/RSH/east.npy').tolist()

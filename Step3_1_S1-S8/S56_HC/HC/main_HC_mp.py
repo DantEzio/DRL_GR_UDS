@@ -161,8 +161,8 @@ for i in range(len(rainfalle)):
 
 
 # Real rainfall
-rainfalle = np.load('./test_rainfall/RealRain/realw.npy').tolist()
-rainfallw = np.load('./test_rainfall/RealRain/realw.npy').tolist()
+rainfalle = np.load('./test_rainfall/RealRain/real.npy').tolist()
+rainfallw = np.load('./test_rainfall/RealRain/real.npy').tolist()
 for i in range(len(rainfalle)):
     print(i)
     test_his = test(rainfalle[i],rainfallw[i],i,'RR')

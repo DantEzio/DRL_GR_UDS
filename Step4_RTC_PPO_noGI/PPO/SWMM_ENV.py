@@ -177,12 +177,20 @@ class SWMM_ENV:
         for it in ['CC-R1','CC-R2','CC-S1','CC-S2','JK-R1','JK-R2','JK-S']:
             pumps_flow.append(links[it].flow)
 
-        Res_tn = 1/(1+self.params['kc']*((tem_sevC)/(Qtw))+self.params['kf']*((tem_sevF)/(Qtw)))
-        DRes_tn = 1/(1+(tem_dres)/(Qtw))
+        if Qtw == 0:
+            Res_tn=1
+            DRes_tn=1
+        else:
+            Res_tn = 1/(1+self.params['kc']*((tem_sevC)/(Qtw))+self.params['kf']*((tem_sevF)/(Qtw)))
+            DRes_tn = 1/(1+(tem_dres)/(Qtw))
+        if Res_tn<1:
+            time_reward = -10
+        else:
+            time_reward = 0
         CSO = CSOtem - self.CSO
         self.CSO = CSOtem
         #FC = -(flooding+CSO)/Qtw
-        rewards = Res_tn
+        rewards = Res_tn + time_reward
         #rewards = -(flooding+CSO)/inflow
         #rewards = np.exp(-(flooding/inflow)**2/0.01) + np.exp(-(CSO/inflow)**2/0.01)
         

@@ -14,8 +14,6 @@ from pyswmm import Simulation,Links,Nodes,RainGages,SystemStats
 import matplotlib.pyplot as plt
 
 
-Interval_t=300
-
 def get_step(sim,config,params,tn,Qn,sflooding,sCSO):
     #获取模拟结果
     nodes = Nodes(sim)
@@ -47,7 +45,7 @@ def get_step(sim,config,params,tn,Qn,sflooding,sCSO):
         if _temp[0] == 'sevF':
             for n in nodes:
                 deltt=(n.statistics['flooding_duration']-tn[n.nodeid])*60 #minutes
-                tem_sevF+=n.flooding*deltt/Interval_t
+                tem_sevF+=n.flooding*deltt/params['advance_seconds']
                 tn[n.nodeid]=n.statistics['flooding_duration']
             
         elif _temp[0] == 'sevC':
@@ -70,9 +68,12 @@ def get_step(sim,config,params,tn,Qn,sflooding,sCSO):
             +sys.routing_stats['wet_weather_inflow']
             +sys.routing_stats['groundwater_inflow']
             +sys.routing_stats['II_inflow'])
-    
-    Res_tn = 1/(1+params['kc']*((tem_sevC)/(Qtw))+params['kf']*((tem_sevF)/(Qtw)))
-    DRes_tn = 1/(1+(tem_dres)/(Qtw))
+    if Qtw == 0:
+        Res_tn=1
+        DRes_tn=1
+    else:
+        Res_tn = 1/(1+params['kc']*((tem_sevC)/(Qtw))+params['kf']*((tem_sevF)/(Qtw)))
+        DRes_tn = 1/(1+(tem_dres)/(Qtw))
     CSO = CSOtem - sCSO
     sCSO = CSOtem
     rewards = Res_tn
@@ -88,7 +89,9 @@ def simfile(file,rainid,config,params):
     sim=Simulation(file+'chaohu_rain_'+str(rainid)+'.inp')
     #sim.execute()
     sim.start()
-    sim._model.swmm_stride(300)
+    time = sim._model.swmm_stride(params['advance_seconds'])
+    done = False if time > 0 else True
+
     test_history = {'time':[] ,'state': [], 'action': [], 'reward': [], 
                     'F':[], 'C':[], 'RES':[], 'DRES':[], 'mainpip':[]}
     cur_flooding,cur_CSO=0,0
@@ -103,10 +106,23 @@ def simfile(file,rainid,config,params):
     for _temp in config['reward_targets']:
         if _temp[0] == 'DRes': 
             Qn[_temp[1]] = nodes[_temp[1]].total_inflow
-    for t in range(95*5):
-        sim._model.swmm_stride(60)
+    
+    #for t in range(95):
+        #time = sim._model.swmm_stride(Interval_t)
+
+    while not done:
+        
+        #模拟一步
+        if params['advance_seconds'] is None:
+            time = sim._model.swmm_step()
+        else:
+            time = sim._model.swmm_stride(params['advance_seconds'])
+        #self.t.append(self.sim._model.getCurrentSimulationTime())
+        Interval_t=params['advance_seconds']/60 #minutes
+        done = False if time > 0 else True
+
         Qn,tn,observation,reward,cur_flooding,cur_CSO,Res_tn,DRes_tn,main_flow=get_step(sim,config,params,tn,Qn,cur_flooding,cur_CSO)
-        test_history['time'].append(t)
+        test_history['time'].append(time)
         test_history['state'].append(observation)
         test_history['reward'].append(reward)
         test_history['F'].append(cur_flooding)

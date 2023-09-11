@@ -521,37 +521,6 @@ WS02003073       FLOW             ""               FLOW     1.0      1        1.
 WS02006230       FLOW             ""               FLOW     1.0      1        10.279   HOURLY
 
 ;;____________________________________________________________________________________________________
-[DWF]
-;;Node           Constituent      Baseline   Patterns  
-;;-------------- ---------------- ---------- ----------
-WS02004404       FLOW             0.162      "HOURLY"
-WS02004405       FLOW             0.0381     "HOURLY"
-WS02006109       FLOW             1.23       "HOURLY"
-WS02006251       FLOW             0.077      "HOURLY"
-YS02001633       FLOW             0.2        "HOURLY"
-YS02001644       FLOW             0.039      "HOURLY"
-YS02001655       FLOW             0.153881   "HOURLY"
-YS02001745       FLOW             0.0044     "HOURLY"
-YS02001748       FLOW             0.045      "HOURLY"
-YS02001751       FLOW             0.011      "HOURLY"
-YS02001754       FLOW             0.26       "HOURLY"
-YS02001759       FLOW             0.04       "HOURLY"
-YS02001767       FLOW             0.535      "HOURLY"
-YS02001770       FLOW             0.153      "HOURLY"
-YS02001779       FLOW             0.005      "HOURLY"
-YS02001784       FLOW             1.06       "HOURLY"
-YS02001786       FLOW             0.0563     "HOURLY"
-YS02001788       FLOW             0.071      "HOURLY"
-YS02001790       FLOW             0.155      "HOURLY"
-YS02001887       FLOW             0.45       "HOURLY"
-YS02001915       FLOW             0.0198     "HOURLY"
-YS02001920       FLOW             2.87       "HOURLY"
-YS02001923       FLOW             0.0377     "HOURLY"
-YS02001926       FLOW             0.052255   "HOURLY"
-YS02006558       FLOW             0.88       "HOURLY"
-YS02163601       FLOW             0.11       "HOURLY"
-
-;;____________________________________________________________________________________________________
 [CURVES]
 ;;Name           Type       X-Value    Y-Value   
 ;;-------------- ---------- ---------- ----------
